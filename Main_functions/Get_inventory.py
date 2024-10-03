@@ -82,13 +82,15 @@ async def get_amount(message: types.Message, state: FSMContext):
     place_class = tuple([i[0] for i in get_functions.get_place_class()])
     Inventory_ID, Inventory_amount = get_functions.get_inventory_id_amount(cur, inventory_info['inventory_name'],
                                                                            place_class)[0]
+    button_cancel = types.InlineKeyboardMarkup(
+        inline_keyboard=[[types.InlineKeyboardButton(text='Отменить ввод', callback_data='Start_menu')]])
     try:
 
         new_inventory_info = [i for i in get_functions.get_inventory_full(inventory_info['inventory_name'], cur)[0]]
 
-        user_name_surname = get_functions.get_user_place(cur,message.from_user.id)[0]
+        user_name_surname = get_functions.get_user_place(cur, message.from_user.id)[0]
         print(1)
-        user_place_id = get_functions.get_place_main(cur,get_functions.concatinate(user_name_surname))[0]
+        user_place_id = get_functions.get_place_main(cur, get_functions.concatinate(user_name_surname))[0]
 
         if len(user_place_id) < 2:
             user_place_id = user_place_id[0]
@@ -97,8 +99,14 @@ async def get_amount(message: types.Message, state: FSMContext):
         new_inventory_info[6] = int(message.text)
         new_inventory_info.pop(0)
         user_get_amount = message.text
-        if int(user_get_amount) < 0:
-            await message.answer("Вы ввели отрицательное число, пожалуйста повторите ввод")
+        if int(user_get_amount) <= 0:
+            if int(user_get_amount) < 0:
+                await message.answer("""Вы ввели отрицательное число. Пожалуйста, введите корректное число 
+или нажмите 'Отменить ввод'""", reply_markup=button_cancel)
+            else:
+                await message.answer("""Вы ввели 0. Пожалуйста, введите корректное число 
+или нажмите 'Отменить ввод'""", reply_markup=button_cancel)
+
 
         elif int(user_get_amount) <= int(Inventory_amount):
             # Обновления данных по объекту. Изменяется количество инвентаря на полке
@@ -133,7 +141,9 @@ async def get_amount(message: types.Message, state: FSMContext):
             conn.commit()
         else:
             await message.answer(
-                'Введено количество, превышающее то, что записано в базе. Повторите выбор пожалуйста')
+                '''Введено количество, превышающее то, что записано в базе. Повторите выбор пожалуйста, 
+или нажмите кнопку "Отменить ввод"''',
+                reply_markup=button_cancel)
     except Exception as e:
         print(e)
         await message.answer("Введены некорректные данные, повторите выбор пожалуйста")

@@ -29,11 +29,10 @@ cur.execute("""CREATE TABLE IF NOT EXISTS persons (
                 Person_ID Serial primary key,
                 Person_name text,
                 Person_surname text,
-                Person_thirdname text,
                 Person_position text,
                 Person_tg_id text,
-                Date_of_start_work text,
-                Date_of_end_work text)""")
+                Date_of_start_work date,
+                Date_of_end_work date)""")
 
 cur.execute("""CREATE TABLE IF NOT EXISTS contragent (
                 ID_contragent serial primary key,

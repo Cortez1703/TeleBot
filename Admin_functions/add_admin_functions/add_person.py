@@ -10,9 +10,6 @@ router = Router()
 
 
 class UserAdd(StatesGroup):
-    userName = State()
-    userSurname = State()
-    userThirdname = State()
     userPosition = State()
     userStartWork = State()
     userEndWork = State()
@@ -21,30 +18,11 @@ class UserAdd(StatesGroup):
 
 @router.callback_query(StateFilter(None), F.data == 'Add_user')
 async def get_user_name(call: types.CallbackQuery, state: FSMContext):
-    print()
-    await call.message.answer("Введите ваше имя")
-    await state.set_state(UserAdd.userName)
-
-
-@router.message(UserAdd.userName)
-async def get_user_surname(message: types.Message, state: FSMContext):
-    await state.update_data(user_name=message.text.capitalize())
-    await state.update_data(user_tg_id=message.from_user.id)
-    await message.answer("Введите вашу фамилию")
-    await state.set_state(UserAdd.userSurname)
-
-
-@router.message(UserAdd.userSurname)
-async def get_user_Thirdname(message: types.Message, state: FSMContext):
-    await state.update_data(user_surname=message.text.capitalize())
-    await message.answer("Введите ваше отчество")
-    await state.set_state(UserAdd.userThirdname)
-
-
-@router.message(UserAdd.userThirdname)
-async def get_user_position(message: types.Message, state: FSMContext):
-    await state.update_data(user_thirdname=message.text.capitalize())
-    await message.answer("Введите вашу должность")
+    print(call.from_user.first_name)
+    await state.update_data(user_name=call.from_user.first_name)
+    await state.update_data(user_surname=call.from_user.last_name)
+    await state.update_data(user_tg_id=call.from_user.id)
+    await call.message.answer("Введите вашу должность")
     await state.set_state(UserAdd.userPosition)
 
 
@@ -73,7 +51,6 @@ async def add_user(message: types.Message, state: FSMContext):
     await message.answer(f"""Вы ввели
     Имя: {user_data['user_name']}
     Фамилия:{user_data['user_surname']}
-    Отчество:{user_data['user_thirdname']}
     Должность:{user_data['user_position']}
     Начало работы:{user_data['user_startwork']}
     Конец работы:{user_data['user_endwork']}""", reply_markup=buttons)
@@ -87,12 +64,11 @@ async def go_to_start_menu(call: types.CallbackQuery, state: FSMContext):
     cur.execute(f"""INSERT INTO persons (
                 Person_name ,
                 Person_surname ,
-                Person_thirdname ,
                 Person_position ,
                 Person_tg_id ,
                 Date_of_start_work ,
                 Date_of_end_work ) VALUES ('{user_data['user_name']}','{user_data['user_surname']}',
-'{user_data['user_thirdname']}','{user_data['user_position']}','{call.from_user.id}',
+                '{user_data['user_position']}','{call.from_user.id}',
 '{user_data['user_startwork']}','{user_data['user_endwork']}')""")
     user_name = user_data['user_surname']+' '+user_data['user_name']
     cur.execute(add_functions.add_place_user(user_name))

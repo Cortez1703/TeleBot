@@ -10,10 +10,9 @@ from Admin_functions.Info_admin_functions import info_contragent
 from Admin_functions.update_admin_functions import update_contragent,update_project,update_subproject
 
 logging.basicConfig(level=logging.INFO)
-bot = Bot('TOKEN')
+bot = Bot('5250044709:AAFNfz1Ia0ux7qdI0-Snj6h2X3B9_IzlyMc')
 dp = Dispatcher()
 
-a = {}
 
 cur, conn = connection()
 

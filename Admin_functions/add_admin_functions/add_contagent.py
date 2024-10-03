@@ -7,12 +7,13 @@ from aiogram.fsm.state import StatesGroup, State
 from aiogram.filters import StateFilter
 from DB_admin_add.add_functions import add_contragent
 
-
-
 conn = psycopg2.connect(dbname='test', user='postgres', password='leolab12', host='127.0.0.1')
 cur = conn.cursor()
 
 router = Router()
+
+button_cancel = types.InlineKeyboardMarkup(
+    inline_keyboard=[[types.InlineKeyboardButton(text='Отменить ввод', callback_data='Start_menu')]])
 
 
 class OrderPlace(StatesGroup):
@@ -22,35 +23,37 @@ class OrderPlace(StatesGroup):
     Comment = State()
     END = State()
 
+
 @router.message(StateFilter(None), Command('add_contragent'))
 async def add_place(message: types.Message, state: FSMContext):
-    await message.answer("Введите торговое название контрагента")
+    await message.answer("Введите торговое название контрагента",reply_markup=button_cancel)
     await state.set_state(OrderPlace.Sale_name)
 
-@router.callback_query(StateFilter(None), F.data=='Get_contragent')
+
+@router.callback_query(StateFilter(None), F.data == 'Get_contragent')
 async def add_place(call: types.CallbackQuery, state: FSMContext):
-    await call.message.answer("Введите торговое название контрагента")
+    await call.message.answer("Введите торговое название контрагента",reply_markup=button_cancel)
     await state.set_state(OrderPlace.Sale_name)
 
 
 @router.message(StateFilter(OrderPlace.Sale_name))
 async def add_place(message: types.Message, state: FSMContext):
     await state.update_data(Sale=message.text.capitalize())
-    await message.answer("Введите юридическое название")
+    await message.answer("Введите юридическое название",reply_markup=button_cancel)
     await state.set_state(OrderPlace.Ur_name)
 
 
 @router.message(StateFilter(OrderPlace.Ur_name))
 async def add_place(message: types.Message, state: FSMContext):
     await state.update_data(ur_name=message.text)
-    await message.answer("Введите дату оформления договора с контрагентом")
+    await message.answer("Введите дату оформления договора с контрагентом",reply_markup=button_cancel)
     await state.set_state(OrderPlace.Date_of_document)
 
 
 @router.message(StateFilter(OrderPlace.Date_of_document))
 async def add_place(message: types.Message, state: FSMContext):
     await state.update_data(date_of_document=message.text)
-    await message.answer("Комментарий")
+    await message.answer("Комментарий",reply_markup=button_cancel)
     await state.set_state(OrderPlace.Comment)
 
 
@@ -60,7 +63,8 @@ async def add_place(message: types.Message, state: FSMContext):
     user_data = await state.get_data()
     buttons = types.InlineKeyboardMarkup(inline_keyboard=[
         [types.InlineKeyboardButton(text='Добавить в базу данных', callback_data="Contragent_add")],
-        [types.InlineKeyboardButton(text='Изменить', callback_data="Contragent_change")]
+        [types.InlineKeyboardButton(text='Изменить', callback_data="Contragent_change")],
+        [types.InlineKeyboardButton(text='Отменить ввод', callback_data='Start_menu')]
 
     ])
     await message.answer(f"""Вы ввели
@@ -68,7 +72,7 @@ async def add_place(message: types.Message, state: FSMContext):
 Юридическое:   {user_data['ur_name']}
 Дата оформления договора с контрагентом:   {user_data['date_of_document']}
 Комментарий:   {user_data['comment']}
-""",reply_markup=buttons)
+""", reply_markup=buttons)
     await state.set_state(OrderPlace.END)
 
 
@@ -77,7 +81,8 @@ async def add_place(call: types.CallbackQuery, state: FSMContext):
     await call.message.answer("Введите торговое название контрагента")
     await state.set_state(OrderPlace.Sale_name)
 
-@router.callback_query(OrderPlace.END,F.data=='Contragent_add')
+
+@router.callback_query(OrderPlace.END, F.data == 'Contragent_add')
 async def add_place(call: types.CallbackQuery, state: FSMContext):
     print(await state.get_data())
     cur.execute(add_contragent(await state.get_data()))
